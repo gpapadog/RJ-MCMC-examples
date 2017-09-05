@@ -4,7 +4,7 @@
 # to update the cutoffs, and then I'm sampling the heights.
 
 set.seed(1234)
-N <- 1000
+N <- 500
 sigma <- 1
 minX <- 0
 maxX <- 10
@@ -13,10 +13,10 @@ minX <- min(X)
 maxX <- max(X)
 true_means <- c(1, 2, 3)
 true_cut <- c(3, 6)
-# mX <- true_means[1] * (X >= minX & X < true_cut[1]) +
-#   true_means[2] * (X >= true_cut[1] & X < true_cut[2]) +
-#   true_means[3] * (X >= true_cut[2])
-mX <- X ^ 2 / 10
+mX <- true_means[1] * (X >= minX & X < true_cut[1]) +
+  true_means[2] * (X >= true_cut[1] & X < true_cut[2]) +
+  true_means[3] * (X >= true_cut[2])
+# mX <- X ^ 2 / 10
 Y <- rnorm(N, mean = mX, sd = sigma)
 plot(X, mX)
 plot(X, Y)
@@ -262,20 +262,40 @@ for (ii in 1:length(heights)) {
     pred_y[wh_obs, ii] <- heights[[ii]][cc]
   }
 }
-plot(1, xlim = c(0, 10), type = 'n', ylim = range(pred_y))
-points(X, Y, pch = 16, cex = 0.3, col = 'red')
-lines(pred_x, apply(pred_y, 1, mean))
-lines(pred_x, apply(pred_y, 1, function(x) quantile(x, probs = 0.1)), col = 'green')
-lines(pred_x, apply(pred_y, 1, function(x) quantile(x, probs = 0.9)), col = 'green')
 
-pred_y <- pred_y[, - c(1:500)]
-plot(1, xlim = c(0, 10), type = 'n', ylim = range(pred_y), main = 'after burn in')
+
+keep <- (Nsims / 2 + 1) : Nsims
+pred_y <- pred_y[, keep]
+cutoffs <- cutoffs[keep]
+
+par(mfrow = c(1, 2), mar = rep(2, 4))
+
+plot(1, xlim = c(0, 10), type = 'n', ylim = range(pred_y), main = '')
 points(X, Y, pch = 16, cex = 0.3, col = 'red')
 lines(pred_x, apply(pred_y, 1, mean))
 lines(pred_x, apply(pred_y, 1, function(x) quantile(x, probs = 0.025)), col = 'green')
 lines(pred_x, apply(pred_y, 1, function(x) quantile(x, probs = 0.975)), col = 'green')
 
+hist(unlist(cutoffs), breaks = 100)
 
+number_cuts <- sapply(cutoffs, length)
+table(number_cuts) / sum(table(number_cuts))
+
+
+
+# Plotting the results separately for the number of cutoffs.
+par(mfrow = c(1, 2), mar = rep(2, 4))
+only_cuts <- 1
+
+wh <- which(number_cuts == only_cuts)
+pred_y_wh <- pred_y[, wh]
+plot(1, xlim = c(0, 10), type = 'n', ylim = range(Y), main = only_cuts)
+points(X, Y, pch = 16, cex = 0.3, col = 'red')
+lines(pred_x, apply(pred_y_wh, 1, mean))
+lines(pred_x, apply(pred_y_wh, 1, function(x) quantile(x, probs = 0.025)), col = 'green')
+lines(pred_x, apply(pred_y_wh, 1, function(x) quantile(x, probs = 0.975)), col = 'green')
+
+hist(unlist(cutoffs[wh]), breaks = 200, xlim = range(X), main = only_cuts)
 
 
 

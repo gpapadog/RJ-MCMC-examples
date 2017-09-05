@@ -13,7 +13,7 @@ CalcLogLike <- function(Y, X, cutoffs, heights, sigma) {
 
 
 set.seed(1234)
-N <- 1000
+N <- 3000
 sigma <- 1
 minX <- 0
 maxX <- 10
@@ -259,21 +259,36 @@ for (ii in 1:length(heights)) {
     pred_y[wh_obs, ii] <- heights[[ii]][cc]
   }
 }
-plot(1, xlim = c(0, 10), type = 'n', ylim = range(pred_y))
-points(X, Y, pch = 16, cex = 0.3, col = 'red')
-lines(pred_x, apply(pred_y, 1, mean))
-lines(pred_x, apply(pred_y, 1, function(x) quantile(x, probs = 0.1)), col = 'green')
-lines(pred_x, apply(pred_y, 1, function(x) quantile(x, probs = 0.9)), col = 'green')
 
 pred_y <- pred_y[, - c(1:2000)]
-plot(1, xlim = c(0, 10), type = 'n', ylim = range(pred_y), main = 'after burn in')
+cutoffs <- cutoffs[-c(1:2000)]
+
+par(mfrow = c(1, 2), oma = rep(1, 4))
+
+plot(1, xlim = c(0, 10), type = 'n', ylim = range(pred_y), main = '')
 points(X, Y, pch = 16, cex = 0.3, col = 'red')
 lines(pred_x, apply(pred_y, 1, mean))
 lines(pred_x, apply(pred_y, 1, function(x) quantile(x, probs = 0.025)), col = 'green')
 lines(pred_x, apply(pred_y, 1, function(x) quantile(x, probs = 0.975)), col = 'green')
 
+hist(unlist(cutoffs), breaks = 100)
+table(sapply(cutoffs, length)) / sum(table(sapply(cutoffs, length)))
 
 
+
+# Plotting the results separately for the number of cutoffs.
+par(mfrow = c(1, 2), mar = rep(2, 4))
+only_cuts <- 2
+
+wh <- which(number_cuts == only_cuts)
+pred_y_wh <- pred_y[, wh]
+plot(1, xlim = c(0, 10), type = 'n', ylim = range(Y), main = only_cuts)
+points(X, Y, pch = 16, cex = 0.3, col = 'red')
+lines(pred_x, apply(pred_y_wh, 1, mean))
+lines(pred_x, apply(pred_y_wh, 1, function(x) quantile(x, probs = 0.025)), col = 'green')
+lines(pred_x, apply(pred_y_wh, 1, function(x) quantile(x, probs = 0.975)), col = 'green')
+
+hist(unlist(cutoffs[wh]), breaks = 200, xlim = range(X), main = only_cuts)
 
 
 

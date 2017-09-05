@@ -283,6 +283,7 @@ lines(pred_x, apply(pred_y, 1, mean))
 lines(pred_x, apply(pred_y, 1, function(x) quantile(x, probs = 0.025)), col = 'green')
 lines(pred_x, apply(pred_y, 1, function(x) quantile(x, probs = 0.975)), col = 'green')
 
+table(sapply(cutoffs, length))
 
 
 

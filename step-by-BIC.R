@@ -4,14 +4,14 @@
 # likelihood of the data to update the cutoffs, and then I'm sampling the heights.
 
 set.seed(1234)
-N <- 1000
+N <- 2000
 sigma <- 1
 minX <- 0
 maxX <- 10
 X <- rnorm(N, mean = 5, sd = 1.5)
 minX <- min(X)
 maxX <- max(X)
-true_means <- c(1, 2, 3)
+true_means <- c(1, 1.3, 1.5)
 true_cut <- c(3, 6)
 mX <- true_means[1] * (X >= minX & X < true_cut[1]) +
   true_means[2] * (X >= true_cut[1] & X < true_cut[2]) +
@@ -20,8 +20,8 @@ Y <- rnorm(N, mean = mX, sd = sigma)
 plot(X, mX)
 plot(X, Y)
 
-max_cutoffs <- 10
-lambda <- 2  # Poisson parameter for number of breaks.
+max_cutoffs <- 30
+lambda <- 10  # Poisson parameter for number of breaks.
 
 # Calculating the c parameter of bk, dk.
 bk <- rep(0, max_cutoffs + 1)
@@ -228,22 +228,21 @@ for (ii in 1:length(heights)) {
     pred_y[wh_obs, ii] <- heights[[ii]][cc]
   }
 }
-plot(1, xlim = c(0, 10), type = 'n', ylim = range(pred_y))
-points(X, Y, pch = 16, cex = 0.3, col = 'red')
-lines(pred_x, apply(pred_y, 1, mean))
-lines(pred_x, apply(pred_y, 1, function(x) quantile(x, probs = 0.1)), col = 'green')
-lines(pred_x, apply(pred_y, 1, function(x) quantile(x, probs = 0.9)), col = 'green')
 
-pred_y <- pred_y[, - c(1:2000)]
-plot(1, xlim = c(0, 10), type = 'n', ylim = range(pred_y), main = 'after burn in')
+keep <- (Nsims / 2 + 1) : Nsims
+keep <- keep(seq(1, length(keep), by = 3))
+pred_y <- pred_y[, keep]
+cutoffs <- cutoffs[keep]
+
+
+plot(1, xlim = c(0, 10), type = 'n', ylim = range(pred_y), main = '')
 points(X, Y, pch = 16, cex = 0.3, col = 'red')
 lines(pred_x, apply(pred_y, 1, mean))
 lines(pred_x, apply(pred_y, 1, function(x) quantile(x, probs = 0.025)), col = 'green')
 lines(pred_x, apply(pred_y, 1, function(x) quantile(x, probs = 0.975)), col = 'green')
 
+number_cuts <- sapply(cutoffs, length)
+table(number_cuts) / sum(table(number_cuts))
 
 
-
-
-
-
+hist(unlist(cutoffs), breaks = 500)
